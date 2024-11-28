@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otus-dz3-deployment
+  labels:
+    app: otus-dz3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otus-dz3
+  template:
+    metadata:
+      labels:
+        app: otus-dz3
+    spec:
+      containers:
+      - name: otus-dz3
+        image: ilyaolshannikov/otus-dz3:latest
+        ports:
+        - containerPort: 8000
+        livenessProbe:
+          httpGet:
+            path: /health/
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5

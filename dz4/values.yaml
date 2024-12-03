@@ -1,0 +1,6 @@
+postgresql:
+  postgresqlUsername: user
+  postgresqlPassword: 'P@ssw0rd'
+  postgresqlDatabase: users_db
+  service:
+    enabled: true

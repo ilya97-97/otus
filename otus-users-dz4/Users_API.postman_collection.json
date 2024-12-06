@@ -1,0 +1,88 @@
+{
+    "info": {
+      "name": "Users API",
+      "description": "Collection for testing Users CRUD API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Create User",
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "exec": [
+                "if (pm.response.code === 200) {",
+                "    var jsonData = pm.response.json();",
+                "    pm.globals.set(\"user_id\", jsonData.id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }
+        ],
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"name\": \"Bill Gates\",\n    \"email\": \"bill@microsoft.com\"\n}"
+          },
+          "url": {
+            "raw": "http://arch.homework/users",
+            "protocol": "http",
+            "host": ["arch", "homework"],
+            "path": ["users"]
+          },
+          "description": "Create a new user"
+        }
+      },
+      {
+        "name": "Get All Users",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "http://arch.homework/users",
+            "protocol": "http",
+            "host": ["arch", "homework"],
+            "path": ["users"]
+          },
+          "description": "Get list of all users"
+        }
+      },
+      {
+        "name": "Get User by ID",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "http://arch.homework/users/{{user_id}}",
+            "protocol": "http",
+            "host": ["arch", "homework"],
+            "path": ["users", "{{user_id}}"]
+          },
+          "description": "Get user by ID"
+        }
+      },
+      {
+        "name": "Delete User",
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": {
+            "raw": "http://arch.homework/users/{{user_id}}",
+            "protocol": "http",
+            "host": ["arch", "homework"],
+            "path": ["users", "{{user_id}}"]
+          },
+          "description": "Delete user by ID"
+        }
+      }
+    ]
+  }

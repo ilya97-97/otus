@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-postgresql-config
+data:
+  POSTGRES_DB: {{ .Values.postgresql.database }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-postgresql-init
+data:
+  init.sql: |
+    {{- .Values.initdb.scripts.init_sql | nindent 4 }} 

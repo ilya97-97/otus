@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: postgres-alerts
+spec:
+  groups:
+  - name: postgres
+    rules:
+    - alert: HighConnectionCount
+      expr: pg_stat_activity_count > 100
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: High number of database connections
+        description: Database connection count is above 100 for 5 minutes
+    - alert: LowCacheHitRatio
+      expr: pg_stat_database_blks_hit / (pg_stat_database_blks_hit + pg_stat_database_blks_read) < 0.95
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: Low cache hit ratio
+        description: Database cache hit ratio is below 95% for 15 minutes 

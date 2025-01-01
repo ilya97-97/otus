@@ -1,0 +1,25 @@
+postgresql:
+  username: postgres
+  password: password
+  database: users_db
+
+persistence:
+  size: 1Gi
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+initdb:
+  scripts:
+    init_sql: |
+      CREATE TABLE users (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(100) NOT NULL,
+          email VARCHAR(100) UNIQUE NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );

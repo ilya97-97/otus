@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: users-api-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+    prometheus.io/path: "/metrics"
+spec:
+  rules:
+  - host: arch.homework
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: users-api
+            port:
+              number: 80 

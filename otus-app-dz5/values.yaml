@@ -1,0 +1,53 @@
+postgresql:
+  username: "admin"
+  password: "password"
+  database: "users_db"
+
+persistence:
+  enabled: true
+  size: "1Gi"
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+initdb:
+  scripts:
+    init_sql: |
+      CREATE TABLE users (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(100) NOT NULL,
+          email VARCHAR(100) UNIQUE NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+service:
+  type: ClusterIP
+  port: 5432
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+
+securityContext:
+  enabled: true
+  fsGroup: 1001
+
+networkPolicy:
+  enabled: true
+  ingressRules:
+    primaryAccessOnlyFrom:
+      - podSelector:
+          matchLabels:
+            app: users-api
+
+replication:
+  enabled: false
+
+backup:
+  enabled: false

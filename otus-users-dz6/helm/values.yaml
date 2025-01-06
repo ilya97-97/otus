@@ -1,0 +1,17 @@
+jwt:
+  secret: "38PTvjbq0MEKGUnpRmLTPfOkse/pWdCl1bB4flv3/h9GS0skRdzgHeTI56tX5FP1"
+
+authService:
+  image: ilyaolshannikov/auth-service-dz6:latest
+
+profileService:
+  image: ilyaolshannikov/profile-service-dz6:latest
+
+ingress:
+  host: arch.homework
+
+postgresql:
+  image: postgres:15
+  username: userapp
+  password: userpass
+  database: userdb 

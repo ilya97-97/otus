@@ -1,0 +1,8 @@
+apiVersion: v2
+name: user-profile-system
+description: A Helm chart for User Profile System with Auth
+version: 0.1.0
+dependencies:
+  - name: postgresql
+    version: 0.1.0
+    repository: "file://./charts/postgresql"

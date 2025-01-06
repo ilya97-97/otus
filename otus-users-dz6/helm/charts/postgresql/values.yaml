@@ -1,0 +1,5 @@
+postgresql:
+  image: postgres:15
+  username: userapp
+  password: userpass
+  database: userdb 

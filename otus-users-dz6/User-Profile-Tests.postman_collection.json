@@ -1,0 +1,244 @@
+{
+  "info": {
+    "name": "Тесты Профиля Пользователя",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "arch.homework",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Регистрация пользователя 1",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.variables.set('user1Email', pm.variables.replaceIn('{{$randomEmail}}'));",
+              "pm.variables.set('user1Password', pm.variables.replaceIn('{{$randomPassword}}'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Успешная регистрация', function() {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.token).to.exist;",
+              "    pm.variables.set('user1Token', response.token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{user1Email}}\",\n  \"password\": \"{{user1Password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "2. Проверка доступа к профилю без токена",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Доступ запрещен без токена', function() {",
+              "    pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/profile"
+      }
+    },
+    {
+      "name": "3. Вход пользователя 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Успешный вход', function() {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.token).to.exist;",
+              "    pm.variables.set('user1Token', response.token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{user1Email}}\",\n  \"password\": \"{{user1Password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "4. Изменение профиля пользователя 1",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.variables.set('user1Name', pm.variables.replaceIn('{{$randomFullName}}'));",
+              "pm.variables.set('user1Bio', pm.variables.replaceIn('{{$randomLoremParagraph}}'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Профиль успешно обновлен', function() {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.name).to.equal(pm.variables.get('user1Name'));",
+              "    pm.expect(response.bio).to.equal(pm.variables.get('user1Bio'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/profile",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user1Token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{user1Name}}\",\n  \"bio\": \"{{user1Bio}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "5. Проверка профиля пользователя 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Профиль получен успешно', function() {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.name).to.equal(pm.variables.get('user1Name'));",
+              "    pm.expect(response.bio).to.equal(pm.variables.get('user1Bio'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/profile",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user1Token}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "6. Регистрация пользователя 2",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.variables.set('user2Email', pm.variables.replaceIn('{{$randomEmail}}'));",
+              "pm.variables.set('user2Password', pm.variables.replaceIn('{{$randomPassword}}'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Успешная регистрация', function() {",
+              "    pm.response.to.have.status(200);",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.token).to.exist;",
+              "    pm.variables.set('user2Token', response.token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{user2Email}}\",\n  \"password\": \"{{user2Password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "7. Попытка получить профиль пользователя 1 от имени пользователя 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Доступ к чужому профилю запрещен', function() {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/profile",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user2Token}}"
+          }
+        ]
+      }
+    }
+  ]
+} 

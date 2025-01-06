@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: otus-users-dz6-ingress
+spec:
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service-dz6
+                port:
+                  number: 80
+          - path: /profile
+            pathType: Prefix
+            backend:
+              service:
+                name: profile-service-dz6
+                port:
+                  number: 80 

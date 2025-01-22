@@ -1,0 +1,18 @@
+image:
+  repository: postgres
+  tag: 14-alpine
+  pullPolicy: IfNotPresent
+
+auth:
+  username: postgres
+  password: postgres
+  database: stream_processing
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+
+service:
+  type: ClusterIP
+  port: 5432 

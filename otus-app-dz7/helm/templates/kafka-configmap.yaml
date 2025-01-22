@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-kafka-config
+data:
+  KAFKA_CFG_ZOOKEEPER_CONNECT: "zookeeper:2181"
+  KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092"
+  KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka.otus-app-dz7.svc.cluster.local:9092"
+  KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+  KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: "1"
+  ALLOW_PLAINTEXT_LISTENER: "yes" 

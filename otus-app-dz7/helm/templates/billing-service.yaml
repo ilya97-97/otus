@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-service
+  labels:
+    app: billing-service
+spec:
+  replicas: {{ .Values.billingService.replicaCount }}
+  selector:
+    matchLabels:
+      app: billing-service
+  template:
+    metadata:
+      labels:
+        app: billing-service
+    spec:
+      initContainers:
+      - name: wait-for-postgresql
+        image: postgres:14-alpine
+        command: ['sh', '-c', 
+          'until pg_isready -h postgresql -p 5432 -U postgres; do echo waiting for postgresql; sleep 2; done;']
+      - name: init-db
+        image: postgres:14-alpine
+        command: ['sh', '-c',
+          'PGPASSWORD=$POSTGRES_PASSWORD psql -h postgresql -U postgres -d stream_processing -c "$(cat /schema/schema.sql)"']
+        env:
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        volumeMounts:
+        - name: schema
+          mountPath: /schema
+      containers:
+      - name: billing-service
+        image: "{{ .Values.billingService.image.repository }}:{{ .Values.billingService.image.tag }}"
+        ports:
+        - containerPort: 3001
+        env:
+        {{- range $key, $value := .Values.billingService.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+      volumes:
+      - name: schema
+        configMap:
+          name: billing-service-schema
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billing-service
+  labels:
+    app: billing-service
+spec:
+  selector:
+    app: billing-service
+  ports:
+  - port: 3001
+    targetPort: 3001 

@@ -1,0 +1,379 @@
+{
+  "info": {
+    "name": "Stream Processing Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Create User Account",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const timestamp = new Date().getTime();",
+              "pm.collectionVariables.set('userId', timestamp);",
+              "console.log('Generated userId:', timestamp);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201 or account already exists', function() {",
+              "    pm.expect(pm.response.code).to.be.oneOf([201, 500]);",
+              "});",
+              "console.log('Creating account for user:', pm.collectionVariables.get('userId'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"userId\": {{userId}}, \"email\": \"test{{userId}}@test.com\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/billing/api/accounts",
+          "host": ["{{baseUrl}}"],
+          "path": ["billing", "api", "accounts"]
+        }
+      }
+    },
+    {
+      "name": "2. Check Initial Balance",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "console.log('Initial balance:', response.balance);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/billing/api/accounts/{{userId}}/balance",
+          "host": ["{{baseUrl}}"],
+          "path": ["billing", "api", "accounts", "{{userId}}", "balance"]
+        }
+      }
+    },
+    {
+      "name": "3. Deposit Money",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Balance is updated', function() {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('balance');",
+              "    const balance = parseFloat(response.balance);",
+              "    pm.collectionVariables.set('initialBalance', balance);",
+              "    console.log('Balance after deposit:', balance);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\": 100}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/billing/api/accounts/{{userId}}/deposit",
+          "host": ["{{baseUrl}}"],
+          "path": ["billing", "api", "accounts", "{{userId}}", "deposit"]
+        }
+      }
+    },
+    {
+      "name": "4. Create Successful Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Order processed successfully', function() {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.message).to.eql('Order processed successfully');",
+              "    pm.expect(response).to.have.property('balance');",
+              "    const newBalance = parseFloat(response.balance);",
+              "    const initialBalance = parseFloat(pm.collectionVariables.get('initialBalance'));",
+              "    pm.expect(newBalance).to.be.lessThan(initialBalance);",
+              "    pm.collectionVariables.set('balanceAfterOrder', newBalance);",
+              "    console.log('Balance after successful order:', newBalance);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\": 50}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/billing/api/accounts/{{userId}}/order",
+          "host": ["{{baseUrl}}"],
+          "path": ["billing", "api", "accounts", "{{userId}}", "order"]
+        }
+      }
+    },
+    {
+      "name": "5. Check Balance After Successful Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Balance matches the order result', function() {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('balance');",
+              "    const balance = parseFloat(response.balance);",
+              "    const expectedBalance = parseFloat(pm.collectionVariables.get('balanceAfterOrder'));",
+              "    pm.expect(balance).to.equal(expectedBalance);",
+              "    console.log('Current balance:', balance);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/billing/api/accounts/{{userId}}/balance",
+          "host": ["{{baseUrl}}"],
+          "path": ["billing", "api", "accounts", "{{userId}}", "balance"]
+        }
+      }
+    },
+    {
+      "name": "6. Check Notifications After Successful Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Success order notification is present', function() {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.be.an('array');",
+              "    pm.expect(response.length).to.be.at.least(1);",
+              "    const lastNotification = response[0];",
+              "    pm.expect(lastNotification).to.have.property('message');",
+              "    pm.expect(lastNotification.message).to.include('Order processed successfully');",
+              "    pm.expect(lastNotification.message).to.include('50');",
+              "    pm.expect(lastNotification).to.have.property('type', 'order_processed');",
+              "    console.log('Notification message:', lastNotification.message);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/notifications/api/notifications/{{userId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["notifications", "api", "notifications", "{{userId}}"]
+        }
+      }
+    },
+    {
+      "name": "7. Create Failed Order (Insufficient Funds)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 400', function() {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Error message is correct', function() {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.error).to.eql('Insufficient funds');",
+              "    console.log('Failed order attempt - error:', response.error);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\": 1000}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/billing/api/accounts/{{userId}}/order",
+          "host": ["{{baseUrl}}"],
+          "path": ["billing", "api", "accounts", "{{userId}}", "order"]
+        }
+      }
+    },
+    {
+      "name": "8. Check Balance After Failed Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Balance remains unchanged after failed order', function() {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('balance');",
+              "    const balance = parseFloat(response.balance);",
+              "    const expectedBalance = parseFloat(pm.collectionVariables.get('balanceAfterOrder'));",
+              "    pm.expect(balance).to.equal(expectedBalance);",
+              "    console.log('Balance after failed order (should be unchanged):', balance);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/billing/api/accounts/{{userId}}/balance",
+          "host": ["{{baseUrl}}"],
+          "path": ["billing", "api", "accounts", "{{userId}}", "balance"]
+        }
+      }
+    },
+    {
+      "name": "9. Check Notifications After Failed Order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Both success and failed order notifications are present', function() {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.be.an('array');",
+              "    pm.expect(response.length).to.be.at.least(1);",
+              "",
+              "    const successNotification = response.find(n => n.message.includes('50'));",
+              "    pm.expect(successNotification).to.exist;",
+              "    pm.expect(successNotification.type).to.equal('order_processed');",
+              "    console.log('All notifications:', response.map(n => ({ type: n.type, message: n.message })));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/notifications/api/notifications/{{userId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["notifications", "api", "notifications", "{{userId}}"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "host",
+      "value": "arch.homework",
+      "type": "string"
+    },
+    {
+      "key": "port",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://{{host}}:{{port}}",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "initialBalance",
+      "value": "0"
+    },
+    {
+      "key": "balanceAfterOrder",
+      "value": "0"
+    }
+  ]
+} 

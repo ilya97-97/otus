@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  labels:
+    app: notification-service
+spec:
+  replicas: {{ .Values.notificationService.replicaCount }}
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      initContainers:
+      - name: wait-for-postgresql
+        image: postgres:14-alpine
+        command: ['sh', '-c', 
+          'until pg_isready -h postgresql -p 5432 -U postgres; do echo waiting for postgresql; sleep 2; done;']
+      - name: init-db
+        image: postgres:14-alpine
+        command: ['sh', '-c',
+          'PGPASSWORD=$POSTGRES_PASSWORD psql -h postgresql -U postgres -d stream_processing -c "$(cat /schema/schema.sql)"']
+        env:
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        volumeMounts:
+        - name: schema
+          mountPath: /schema
+      containers:
+      - name: notification-service
+        image: "{{ .Values.notificationService.image.repository }}:{{ .Values.notificationService.image.tag }}"
+        ports:
+        - containerPort: 3002
+        env:
+        {{- range $key, $value := .Values.notificationService.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+      volumes:
+      - name: schema
+        configMap:
+          name: notification-service-schema
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  labels:
+    app: notification-service
+spec:
+  selector:
+    app: notification-service
+  ports:
+  - port: 3002
+    targetPort: 3002 

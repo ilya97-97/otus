@@ -1,0 +1,111 @@
+postgresql:
+  auth:
+    username: postgres
+    password: postgres
+    database: stream_processing
+  persistence:
+    enabled: true
+    size: 1Gi
+  image:
+    repository: postgres
+    tag: 14-alpine
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5432
+
+kafka:
+  replicaCount: 1
+  image:
+    repository: bitnami/kafka
+    tag: 3.6.0
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 9092
+  persistence:
+    enabled: true
+    size: 1Gi
+    existingClaim: kafka-pvc
+  readinessProbe:
+    tcpSocket:
+      port: 9092
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  env:
+    - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+      value: "zookeeper:2181"
+    - name: KAFKA_CFG_LISTENERS
+      value: "PLAINTEXT://:9092"
+    - name: KAFKA_CFG_ADVERTISED_LISTENERS
+      value: "PLAINTEXT://kafka.otus-app-dz7.svc.cluster.local:9092"
+    - name: KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE
+      value: "true"
+    - name: KAFKA_CFG_DEFAULT_REPLICATION_FACTOR
+      value: "1"
+    - name: ALLOW_PLAINTEXT_LISTENER
+      value: "yes"
+  zookeeper:
+    persistence:
+      enabled: true
+      size: 1Gi
+    image:
+      repository: zookeeper
+      tag: latest
+      pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 2181
+
+userService:
+  image:
+    repository: ilyaolshannikov/user-service-dz7
+    tag: v1.1
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  env:
+    POSTGRES_HOST: postgresql
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: stream_processing
+    BILLING_SERVICE_URL: http://billing-service:3001
+
+billingService:
+  image:
+    repository: ilyaolshannikov/billing-service-dz7
+    tag: v1.6
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  initContainers:
+    - name: wait-for-kafka
+      image: busybox
+      command: ['sh', '-c', 'until nc -z kafka.otus-app-dz7.svc.cluster.local 9092; do echo waiting for kafka; sleep 2; done;']
+  env:
+    POSTGRES_HOST: postgresql
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: stream_processing
+    KAFKA_BROKERS: "kafka.otus-app-dz7.svc.cluster.local:9092"
+
+notificationService:
+  image:
+    repository: ilyaolshannikov/notification-service-dz7
+    tag: v1.1
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  initContainers:
+    - name: wait-for-kafka
+      image: busybox
+      command: ['sh', '-c', 'until nc -z kafka.otus-app-dz7.svc.cluster.local 9092; do echo waiting for kafka; sleep 2; done;']
+  env:
+    POSTGRES_HOST: postgresql
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: stream_processing
+    KAFKA_BROKERS: "kafka.otus-app-dz7.svc.cluster.local:9092"
